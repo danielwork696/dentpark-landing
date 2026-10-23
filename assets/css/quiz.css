@@ -1,0 +1,887 @@
+/* ============================================================
+   DentPark — квиз-сайт по имплантации на 4–6 имплантах
+   Отдельная посадочная под Meta Ads. Квиз — это и есть страница.
+
+   Направление то же, что на лендинге: клинический модернизм.
+   Композиция другая: слева тёмная колонка «почему сюда», справа
+   вопрос. Колонка не уезжает — человек отвечает, держа доводы
+   в поле зрения. На мобильном колонка становится полосой сверху,
+   а карточка квиза заходит на неё снизу.
+   ============================================================ */
+
+/* --- Шрифты. Те же сабсеты, что на лендинге ---------------- */
+
+@font-face {
+  font-family: 'Serif4';
+  src: url('../fonts/serif-cyrillic.sub.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+2116;
+}
+@font-face {
+  font-family: 'Serif4';
+  src: url('../fonts/serif-latin.sub.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+  unicode-range: U+0000-00FF, U+2000-206F, U+2212;
+}
+@font-face {
+  font-family: 'Serif4';
+  src: url('../fonts/serif-latin-ext.sub.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+  unicode-range: U+0100-02BA, U+1E00-1E9F, U+2020, U+20A0-20AB;
+}
+@font-face {
+  font-family: 'Comm';
+  src: url('../fonts/comm-cyrillic.sub.woff2') format('woff2');
+  font-weight: 400 700; font-style: normal; font-display: swap;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+2116;
+}
+@font-face {
+  font-family: 'Comm';
+  src: url('../fonts/comm-latin.sub.woff2') format('woff2');
+  font-weight: 400 700; font-style: normal; font-display: swap;
+  unicode-range: U+0000-00FF, U+2000-206F, U+2212;
+}
+@font-face {
+  font-family: 'Comm';
+  src: url('../fonts/comm-latin-ext.sub.woff2') format('woff2');
+  font-weight: 400 700; font-style: normal; font-display: swap;
+  unicode-range: U+0100-02BA, U+1E00-1E9F, U+2020, U+20A0-20AB;
+}
+
+/* --- Токены. Совпадают с лендингом: это одна марка --------- */
+
+:root {
+  --paper:      #faf7f0;
+  --paper-deep: #f3eee2;
+  --cream:      #fdf5e4;
+  --surface:    #ffffff;
+
+  --ink:        #17251c;
+  --ink-soft:   #46524a;
+  --ink-mute:   #626b64;
+  --line:       #e3ddcd;
+  --line-soft:  #efeade;
+
+  --forest:     #143024;
+  --forest-2:   #1c412f;
+  --forest-3:   #2a5a41;
+  --on-dark:    #eef5ea;
+  --on-dark-2:  #a9bdaf;
+
+  --lime:       #a8cc38;
+  --lime-deep:  #85ab1c;
+  --lime-text:  #46600f;
+  --lime-wash:  #edf4d7;
+  --lime-soft:  #dcebb4;
+
+  --amber:      #ffbc20;
+  --amber-soft: #fff2d2;
+  --amber-text: #7a5200;
+
+  --f-display: 'Serif4', Georgia, 'Times New Roman', serif;
+  --f-text:    'Comm', 'Segoe UI', system-ui, sans-serif;
+
+  --t-hero: clamp(2rem, 6.4vw, 3.5rem);
+  --t-q:    clamp(1.375rem, 4.4vw, 1.875rem);
+  --t-lede: clamp(1.0625rem, 2.2vw, 1.1875rem);
+  --t-body: 1.0625rem;      /* 17px — нижняя граница для 45–65 */
+  --t-small: 0.9375rem;     /* 15px */
+
+  --gut: clamp(1.25rem, 5vw, 2.25rem);
+
+  --r-s: 8px;
+  --r-m: 16px;
+  --r-l: 28px;
+  --r-xl: 36px;
+
+  --sh-soft: 0 1px 2px rgba(20,48,36,.05), 0 10px 28px -14px rgba(20,48,36,.22);
+  --sh-card: 0 2px 6px rgba(20,48,36,.07), 0 34px 64px -26px rgba(20,48,36,.36);
+  --sh-lime: 0 2px 4px rgba(20,48,36,.08), 0 18px 36px -16px rgba(133,171,28,.6);
+
+  --ease: cubic-bezier(.22, .61, .36, 1);
+  --dock-h: 0px;
+
+  /* Насколько карточка квиза заезжает на тёмную колонку.
+     Одно значение на два правила: сдвиг карточки и отступ колонки.
+     Развязывать их нельзя — румынский текст длиннее русского, и на
+     RO строка «anestezist» уехала ровно под карточку. */
+  --overlap: clamp(2.5rem, 3.2vw, 4.5rem);
+}
+
+/* --- Сброс ------------------------------------------------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Флекс и грид перебивают hidden — без этого скрытые шаги видны */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--f-text);
+  font-size: var(--t-body);
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: var(--dock-h);
+}
+
+img, svg, video { display: block; max-width: 100%; }
+img { height: auto; }
+
+h1, h2, h3 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -.015em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p { margin: 0; }
+ul, ol, dl, dd { margin: 0; padding: 0; list-style: none; }
+
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+a { color: inherit; }
+
+:focus-visible {
+  outline: 3px solid var(--lime-deep);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   КАРКАС
+   Десктоп: две колонки, левая тёмная и не уезжает.
+   Мобильный: полоса сверху, карточка квиза заходит на неё.
+   ============================================================ */
+
+/* Мобильный порядок = порядок в разметке: полоса с обещанием,
+   карточка квиза, доводы. Доводы намеренно ПОСЛЕ квиза — иначе
+   первый вопрос уезжает за сгиб.
+   На десктопе обещание и доводы собираются в одну левую колонку. */
+
+.shell { display: grid; }
+
+@media (min-width: 1180px) {
+  .shell {
+    grid-template-columns: minmax(0, 0.78fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    min-height: 100vh;
+  }
+  .aside { grid-column: 1; grid-row: 1; }
+  .trust { grid-column: 1; grid-row: 2; }
+  .main  { grid-column: 2; grid-row: 1 / -1; }
+}
+
+/* ============================================================
+   ОБЕЩАНИЕ
+   ============================================================ */
+
+.aside {
+  position: relative;
+  background: var(--forest);
+  color: var(--on-dark);
+  padding: clamp(1rem, 3vw, 2.25rem) var(--gut) clamp(3.5rem, 9vw, 3rem);
+}
+
+/* Тонкая лаймовая линейка по верхнему краю — единственный декор,
+   и у него есть функция: он привязывает страницу к марке. */
+.aside::before {
+  content: '';
+  position: absolute; inset: 0 0 auto 0; height: 4px;
+  background: var(--lime);
+}
+
+.aside__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: clamp(1.5rem, 5vw, 2.75rem);
+}
+
+/* Логотип — тот же файл, только тёмная часть перекрашена в светлую
+   (assets/logo-light.svg). Инверсия фильтром не годится: она красит
+   и лист, лист сливается с буквой D и знак перестаёт читаться. */
+/* min-height — не про красоту, а про палец: ссылка высотой 32px
+   не проходит порог нажатия 44×44 */
+.aside__logo { display: inline-flex; align-items: center; min-height: 44px; }
+
+.aside__phone {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: var(--t-small);
+  color: var(--on-dark);
+  white-space: nowrap;
+  padding: .625rem .875rem;
+  min-height: 44px;
+  border: 1px solid rgba(238,245,234,.22);
+  border-radius: 999px;
+  transition: border-color .18s var(--ease), background .18s var(--ease);
+}
+.aside__phone:hover { border-color: var(--lime); background: rgba(168,204,56,.12); }
+.aside__phone svg { flex: none; color: var(--lime); }
+
+.eyebrow {
+  font-size: .8125rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--lime);
+  margin-bottom: .875rem;
+}
+
+.aside h1 {
+  font-size: var(--t-hero);
+  max-width: 15ch;
+}
+
+.aside__lede {
+  margin-top: 1.125rem;
+  font-size: var(--t-lede);
+  line-height: 1.55;
+  color: var(--on-dark-2);
+  max-width: 34ch;
+}
+
+/* ============================================================
+   ДОВОДЫ + ВРАЧ
+   ============================================================ */
+
+.trust {
+  background: var(--forest);
+  color: var(--on-dark);
+  padding: clamp(1.75rem, 6vw, 2.5rem) var(--gut) clamp(2rem, 6vw, 3rem);
+  display: grid;
+  gap: clamp(1.5rem, 5vw, 2.25rem);
+  align-content: end;
+}
+
+/* --- строкой, не карточками: три одинаковые плитки в ряд —
+       первое, по чему узнают шаблонную вёрстку --- */
+
+.facts {
+  display: grid;
+  gap: .75rem;
+  font-size: var(--t-small);
+  color: var(--on-dark);
+}
+
+.facts li {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: .625rem;
+  align-items: start;
+  line-height: 1.45;
+}
+
+.facts svg { color: var(--lime); margin-top: 2px; }
+
+.facts b { font-weight: 600; }
+
+/* --- врач: фото прижато к низу колонки, карточка заходит на него --- */
+
+.who {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 1.125rem;
+  align-items: center;
+  padding-top: clamp(1.25rem, 4vw, 1.75rem);
+  border-top: 1px solid rgba(238,245,234,.14);
+}
+
+.who__photo {
+  position: relative;
+  margin: 0;
+  border-radius: var(--r-m);
+  overflow: hidden;
+  background: var(--forest-2);
+  aspect-ratio: 4 / 5;
+}
+
+.who__photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; }
+
+.who__name { font-family: var(--f-display); font-size: 1.125rem; font-weight: 600; }
+.who__role { font-size: var(--t-small); color: var(--on-dark-2); margin-top: .125rem; }
+
+.who__num {
+  margin-top: .625rem;
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+.who__num b {
+  font-family: var(--f-display);
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--lime);
+  font-weight: 600;
+}
+.who__num span { font-size: var(--t-small); color: var(--on-dark-2); max-width: 16ch; line-height: 1.3; }
+
+@media (min-width: 1180px) {
+  .aside { padding-bottom: clamp(1.5rem, 3vw, 2.25rem); }
+  .who { grid-template-columns: 124px 1fr; align-items: end; }
+
+  /* Полоса, на которую ложится карточка, остаётся пустой.
+     Правило стоит здесь, а не выше: там его перебивала бы
+     сокращённая запись padding у .aside и .trust. */
+  .aside, .trust { padding-right: calc(var(--gut) + var(--overlap) + 1rem); }
+}
+
+/* ============================================================
+   ПРАВАЯ КОЛОНКА — сам квиз
+   ============================================================ */
+
+.main {
+  background: var(--paper);
+  padding: 0 var(--gut) clamp(2rem, 6vw, 4rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Карточка заходит на тёмную полосу — глубина через перекрытие,
+   а не через свечение. На десктопе перекрытия нет: там колонки
+   стоят рядом, и подъём даёт тень. */
+.card {
+  position: relative;
+  margin-top: -2.25rem;
+  background: var(--surface);
+  border-radius: var(--r-l);
+  box-shadow: var(--sh-card);
+  padding: clamp(1.25rem, 5vw, 2rem);
+  width: 100%;
+  max-width: 34rem;
+}
+
+@media (min-width: 1180px) {
+  .main {
+    /* верхний отступ держит карточку ниже строки с телефоном:
+       на длинном шаге она иначе наезжает на неё углом */
+    padding: clamp(4.25rem, 6vw, 6rem) var(--gut) clamp(2rem, 4vw, 3rem) 0;
+    align-items: flex-start;
+  }
+  /* Карточка заезжает на тёмную колонку. Перекрытие — то же
+     средство глубины, что и на мобильном, просто по другой оси. */
+  .card {
+    margin: 0 0 0 calc(var(--overlap) * -1);
+    padding: clamp(1.75rem, 2.6vw, 2.5rem);
+    max-width: 39rem;
+  }
+}
+
+/* --- прогресс --- */
+
+.prog {
+  display: flex;
+  align-items: center;
+  gap: .875rem;
+  margin-bottom: clamp(1.25rem, 4vw, 1.75rem);
+}
+
+.prog__bar {
+  display: flex;
+  gap: 4px;
+  flex: 1 1 auto;
+}
+
+.prog__bar i {
+  flex: 1;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line);
+  transition: background .3s var(--ease);
+}
+.prog__bar i.is-done { background: var(--lime); }
+
+.prog__num {
+  font-size: var(--t-small);
+  color: var(--ink-mute);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.prog__num b { color: var(--ink); font-weight: 600; }
+
+/* --- шаг --- */
+
+.step { display: none; border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+.step.is-on { display: block; }
+
+.js .step.is-on { animation: stepin .3s var(--ease) both; }
+
+@keyframes stepin {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.qtitle {
+  display: block;
+  font-family: var(--f-display);
+  font-size: var(--t-q);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -.015em;
+  padding: 0;
+  margin-bottom: 1.125rem;
+  text-wrap: balance;
+}
+
+/* --- варианты ответа --- */
+
+.opts { display: grid; gap: .625rem; }
+
+.opt {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: .875rem;
+  align-items: center;
+  width: 100%;
+  min-height: 60px;
+  text-align: left;
+  padding: .875rem 1rem;
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-m);
+  font-size: var(--t-body);
+  line-height: 1.35;
+  color: var(--ink);
+  transition: border-color .16s var(--ease), background .16s var(--ease), transform .16s var(--ease);
+}
+
+/* кружок-маркер: единственная лаймовая точка на экране до выбора */
+.opt::before {
+  content: '';
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--surface);
+  transition: border-color .16s var(--ease), box-shadow .16s var(--ease);
+}
+
+.opt:hover { border-color: var(--lime-deep); background: var(--lime-wash); }
+.opt:hover::before { border-color: var(--lime-deep); }
+
+.opt.is-picked { border-color: var(--lime-deep); background: var(--lime-wash); }
+.opt.is-picked::before {
+  border-color: var(--lime-deep);
+  box-shadow: inset 0 0 0 4px var(--surface), inset 0 0 0 20px var(--lime-deep);
+}
+
+.qhint {
+  margin-top: .875rem;
+  font-size: var(--t-small);
+  color: var(--ink-mute);
+  line-height: 1.45;
+  padding-left: 1.875rem;
+  position: relative;
+}
+.qhint::before {
+  content: '';
+  position: absolute; left: 0; top: .45em;
+  width: 18px; height: 1.5px;
+  background: var(--lime-deep);
+}
+
+/* --- назад --- */
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: .375rem;
+  margin-top: 1.25rem;
+  padding: .5rem .25rem;
+  min-height: 44px;
+  background: none;
+  border: 0;
+  font-size: var(--t-small);
+  color: var(--ink-mute);
+  transition: color .16s var(--ease);
+}
+.back:hover { color: var(--ink); }
+
+/* --- пауза расчёта --- */
+
+.calc { display: none; padding: clamp(2rem, 8vw, 3.25rem) 0; text-align: center; }
+.calc.is-on { display: block; }
+
+.calc p { color: var(--ink-soft); margin-top: 1.125rem; }
+
+.dots { display: inline-flex; gap: .4375rem; }
+.dots i {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--lime-deep);
+  animation: pulse 1.1s var(--ease) infinite;
+}
+.dots i:nth-child(2) { animation-delay: .16s; }
+.dots i:nth-child(3) { animation-delay: .32s; }
+
+@keyframes pulse {
+  0%, 60%, 100% { opacity: .28; transform: scale(.82); }
+  30%           { opacity: 1;   transform: scale(1); }
+}
+
+/* ============================================================
+   ФИНАЛЬНЫЙ ШАГ — контакты
+   ============================================================ */
+
+/* Сводка ответов. Человек видит, что тест что-то учёл,
+   до того как его просят о телефоне. */
+.recap {
+  margin: 0 0 1.25rem;
+  padding: .875rem 1rem;
+  background: var(--cream);
+  border-radius: var(--r-m);
+  border-left: 3px solid var(--lime);
+}
+.recap dt {
+  font-size: .8125rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  font-weight: 600;
+  margin-bottom: .4375rem;
+}
+.recap dd { font-size: var(--t-small); color: var(--ink-soft); line-height: 1.5; }
+
+.qlead {
+  margin: 0 0 1.25rem;
+  font-size: var(--t-small);
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.fld { margin-bottom: .875rem; }
+
+.fld label {
+  display: block;
+  font-size: var(--t-small);
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: .375rem;
+}
+
+.fld input {
+  width: 100%;
+  min-height: 56px;
+  padding: .75rem 1rem;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-m);
+  font-size: var(--t-body);
+  transition: border-color .16s var(--ease), box-shadow .16s var(--ease);
+}
+.fld input::placeholder { color: #9aa39c; }
+.fld input:focus { outline: none; border-color: var(--lime-deep); box-shadow: 0 0 0 3px var(--lime-wash); }
+.fld input[aria-invalid="true"] { border-color: #b3261e; }
+
+.err {
+  display: none;
+  margin-top: .375rem;
+  font-size: var(--t-small);
+  color: #a01b14;
+  line-height: 1.4;
+}
+.err.is-on { display: block; }
+
+.chk {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: .75rem;
+  align-items: start;
+  /* нажимают по всему лейблу — он и должен быть не меньше 44px */
+  min-height: 44px;
+  align-content: center;
+  margin: 1rem 0 .25rem;
+  font-size: var(--t-small);
+  color: var(--ink-soft);
+  line-height: 1.45;
+  cursor: pointer;
+}
+.chk input {
+  width: 22px; height: 22px;
+  margin: 1px 0 0;
+  accent-color: var(--lime-deep);
+  cursor: pointer;
+}
+.chk a { color: var(--lime-text); text-underline-offset: 2px; }
+
+.submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  width: 100%;
+  min-height: 60px;
+  margin-top: 1.125rem;
+  padding: .875rem 1.25rem;
+  /* Чернила на лайме, а не белое: белый текст на #85ab1c даёт
+     контраст 2.7 при норме 4.5 — на этой аудитории это не мелочь. */
+  background: var(--lime);
+  color: var(--ink);
+  border: 0;
+  border-radius: var(--r-m);
+  font-size: 1.125rem;
+  font-weight: 600;
+  box-shadow: var(--sh-lime);
+  transition: background .16s var(--ease), transform .16s var(--ease);
+}
+.submit:hover { background: var(--lime-deep); }
+.submit:active { transform: translateY(1px); }
+.submit[disabled] { opacity: .65; cursor: default; box-shadow: none; }
+
+.qnote {
+  margin-top: .875rem;
+  font-size: var(--t-small);
+  color: var(--ink-mute);
+  text-align: center;
+  line-height: 1.45;
+}
+
+/* Запасной канал: часть аудитории формы не заполняет вообще */
+.alt {
+  margin-top: 1.125rem;
+  padding-top: 1.125rem;
+  border-top: 1px solid var(--line-soft);
+  text-align: center;
+  font-size: var(--t-small);
+  color: var(--ink-mute);
+}
+.alt a {
+  display: inline-flex;
+  align-items: center;
+  gap: .4375rem;
+  min-height: 44px;
+  font-weight: 600;
+  color: var(--lime-text);
+  text-decoration: none;
+  border-bottom: 1.5px solid var(--lime-soft);
+}
+.alt a:hover { border-bottom-color: var(--lime-deep); }
+
+/* honeypot */
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* ============================================================
+   ПОДВАЛ
+   ============================================================ */
+
+.foot {
+  background: var(--paper-deep);
+  border-top: 1px solid var(--line);
+  padding: clamp(2rem, 5vw, 2.75rem) var(--gut);
+  font-size: var(--t-small);
+  color: var(--ink-mute);
+}
+
+.foot__in {
+  max-width: 68rem;
+  margin: 0 auto;
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 760px) {
+  .foot__in { grid-template-columns: 1fr auto; align-items: start; }
+  .foot__note { grid-column: 1 / -1; }
+}
+
+.foot__logo { width: 140px; height: 30px; opacity: .62; margin-bottom: .75rem; }
+
+.foot__links { display: grid; gap: .5rem; justify-items: start; }
+@media (min-width: 760px) { .foot__links { justify-items: end; } }
+
+.foot__links a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink-soft);
+  text-underline-offset: 3px;
+}
+
+.foot__note {
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  line-height: 1.5;
+  max-width: 70ch;
+}
+
+/* Незакрытые данные клиники видно на странице, а не только в коде */
+.slot {
+  background: var(--amber-soft);
+  color: var(--amber-text);
+  border-bottom: 1px dashed var(--amber);
+  padding: 0 .25em;
+}
+
+/* ============================================================
+   ЛИПКАЯ ПАНЕЛЬ
+   Только «позвонить» и WhatsApp: кнопка «записаться» здесь
+   бессмысленна — квиз и есть запись, она конкурировала бы
+   с ответом на вопрос.
+   ============================================================ */
+
+@media (max-width: 1179px) {
+  body { --dock-h: 72px; }
+
+  .dock {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .625rem;
+    padding: .625rem var(--gut) calc(.625rem + env(safe-area-inset-bottom));
+    background: rgba(250,247,240,.96);
+    border-top: 1px solid var(--line);
+    transform: translateY(105%);
+    transition: transform .26s var(--ease);
+  }
+  .dock.is-on { transform: none; }
+
+  /* На шаге с телефоном панель уезжает: она перекрывала бы
+     главную кнопку и спорила бы с ней за нажатие. */
+  body.is-form .dock { transform: translateY(105%); }
+}
+
+@media (min-width: 1180px) {
+  .dock { display: none; }
+}
+
+.dock a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  min-height: 52px;
+  border-radius: var(--r-m);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: var(--t-small);
+}
+.dock__call { background: var(--forest); color: var(--on-dark); }
+.dock__wa   { background: var(--lime);   color: var(--ink); }
+.dock svg { flex: none; }
+
+/* ============================================================
+   СТРАНИЦА «СПАСИБО»
+   ============================================================ */
+
+.ty {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.ty__bar {
+  background: var(--forest);
+  padding: 1rem var(--gut);
+  border-bottom: 4px solid var(--lime);
+}
+.ty__bar img { width: 150px; height: 32px; }
+
+.ty__in {
+  padding: clamp(2.5rem, 8vw, 4.5rem) var(--gut);
+  max-width: 44rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.ty__mark {
+  width: 56px; height: 56px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--lime-wash);
+  color: var(--lime-text);
+  margin-bottom: 1.5rem;
+}
+
+.ty h1 { font-size: clamp(1.75rem, 5.5vw, 2.75rem); max-width: 18ch; }
+
+.ty__lede {
+  margin-top: 1.125rem;
+  font-size: var(--t-lede);
+  color: var(--ink-soft);
+  line-height: 1.55;
+  max-width: 46ch;
+}
+
+.ty__wa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .625rem;
+  min-height: 60px;
+  margin-top: 1.75rem;
+  padding: .875rem 1.75rem;
+  background: var(--lime);
+  color: var(--ink);
+  border-radius: var(--r-m);
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--sh-lime);
+  transition: background .16s var(--ease);
+}
+.ty__wa:hover { background: var(--lime-deep); }
+
+/* Снимок в WhatsApp — вторая конверсия. Человек, который прислал
+   КТ, разговаривает с клиникой ещё до звонка. */
+.ty__snap {
+  margin-top: clamp(2rem, 6vw, 3rem);
+  padding: 1.25rem 1.375rem;
+  background: var(--cream);
+  border-radius: var(--r-m);
+  border-left: 3px solid var(--amber);
+}
+.ty__snap h2 { font-size: 1.25rem; margin-bottom: .5rem; }
+.ty__snap p { color: var(--ink-soft); font-size: var(--t-small); line-height: 1.55; }
+
+.ty__meta {
+  margin-top: clamp(2rem, 6vw, 2.75rem);
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: .5rem;
+  font-size: var(--t-small);
+  color: var(--ink-mute);
+}
+.ty__meta a { color: var(--ink-soft); }
+
+/* ============================================================
+   ДОСТУПНОСТЬ
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Без JS квиз не работает — показываем прямой путь */
+.nojs {
+  display: none;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.125rem;
+  background: var(--amber-soft);
+  border-radius: var(--r-m);
+  font-size: var(--t-small);
+  color: var(--amber-text);
+  line-height: 1.5;
+}
+html:not(.js) .nojs { display: block; }
+html:not(.js) .step:first-of-type { display: block; }

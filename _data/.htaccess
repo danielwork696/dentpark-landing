@@ -1,0 +1,10 @@
+# Здесь телефоны людей. Наружу — ничего.
+# Обе ветки: голый «Deny from all» на Apache 2.4 без mod_access_compat
+# роняет папку в 500, а голый «Require» не понимает Apache 2.2.
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>

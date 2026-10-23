@@ -1,0 +1,101 @@
+# ═══════════════════════════════════════════════════════════
+#  DentPark — лендинг по имплантологии
+#  Корневой .htaccess. Fozzy: cPanel + LiteSpeed (понимает
+#  синтаксис Apache), поддомен implant.dentpark.md.
+# ═══════════════════════════════════════════════════════════
+
+DirectoryIndex index.php index.html
+
+# Листинг каталогов не отдаём никогда
+Options -Indexes
+
+# ── Изоляция от основного сайта ────────────────────────────
+# dentpark.md работает на MODX у того же хостера (Fozzy, cPanel,
+# LiteSpeed). Если папку поддомена положат внутрь public_html,
+# правила ЧПУ из .htaccess MODX начнут применяться и здесь:
+# 404 уйдут в index.php MODX, а редирект на основной домен
+# уведёт с лендинга вообще. Свой RewriteEngine отключает
+# наследование родительских правил.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+</IfModule>
+
+# ── Что наружу не показываем ───────────────────────────────
+# Ключи, рабочие документы и всё, что не является частью сайта.
+
+<FilesMatch "^(config\.php|config\.example\.php|\.gitignore|\.env.*)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+<FilesMatch "\.(md|log|jsonl|py|sh|yml|yaml|bak|tmp)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Каталог заявок и служебные папки — 404, а не 403:
+# 403 подтверждает, что путь существует.
+RedirectMatch 404 (?i)/(_data|\.firecrawl|tools|docs)(/|$)
+
+# Второй замок на те же файлы. Блоки выше завязаны на <IfModule>,
+# а LiteSpeed разбирает его не всегда так же, как Apache;
+# RedirectMatch понимают оба одинаково.
+RedirectMatch 404 (?i)/config(\.example)?\.php$
+RedirectMatch 404 (?i)\.(md|log|jsonl|py|sh|yml|yaml|bak|tmp)$
+
+# ── Адреса ─────────────────────────────────────────────────
+#   implant.dentpark.md/ro/   и /ru/        — лендинг
+#   implant.dentpark.md/quiz/ro/ и /quiz/ru/ — квиз
+# Корень и /quiz/ без языка выбирают язык сами (index.php).
+#
+# Квиз раньше жил под /kviz/. Если старая ссылка успела уйти
+# в креатив или в чат — ведём на новый адрес, метки сохраняются.
+RedirectMatch 301 ^/kviz(/.*)?$ /quiz$1
+
+# ── Типы файлов ────────────────────────────────────────────
+# Часть хостингов не знает woff2 и webp и отдаёт их как поток байт.
+
+AddType font/woff2 .woff2
+AddType image/webp .webp
+
+# ── Кеш ────────────────────────────────────────────────────
+# Хостинг может задавать свой; здесь запасной вариант.
+# Шрифты и картинки с хешируемыми именами — надолго,
+# разметка — без кеша, иначе правки не доедут до людей.
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/html               "access plus 0 seconds"
+  ExpiresByType text/css                "access plus 7 days"
+  ExpiresByType application/javascript  "access plus 7 days"
+  ExpiresByType image/webp              "access plus 30 days"
+  ExpiresByType image/svg+xml           "access plus 30 days"
+  ExpiresByType font/woff2              "access plus 1 year"
+</IfModule>
+
+# ── Сжатие ─────────────────────────────────────────────────
+# woff2 и webp уже сжаты, повторно не трогаем.
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain \
+                                application/javascript application/json \
+                                image/svg+xml
+</IfModule>
+
+# ── Безопасность ───────────────────────────────────────────
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+</IfModule>
